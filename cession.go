@@ -503,7 +503,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 		f.SetColWidth(sheet, "G", "G", 50)
 	}
 	// c2086.pta.PrixTotalAcquisition
-	for year := 2019; year < time.Now().Year(); year++ {
+	for year := 2019; year <= time.Now().Year(); year++ {
 		sheet := strconv.Itoa(year)
 		f.NewSheet(sheet)
 		f.SetCellValue(sheet, "A2", 211)

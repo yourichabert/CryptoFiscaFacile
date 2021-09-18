@@ -464,6 +464,7 @@ func (c2086 Cerfa2086) Println(native string) {
 
 func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 	f := excelize.NewFile()
+	integerStyle, _ := f.NewStyle(`{"custom_number_format": "0"}`)
 	if len(c2086.pta.Acquisitions) > 0 {
 		sheet := "Prix Total Acquisition PEPS"
 		f.NewSheet(sheet)
@@ -556,6 +557,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 					f.SetCellValue(sheet, col+"12", c.SoulteRecueEnCasDechangeAnterieur222.RoundBank(0).IntPart())
 					f.SetCellFormula(sheet, col+"13", "="+col+"10-"+col+"11-"+col+"12")        // [223] = [220]-[221]-[222]
 					f.SetCellFormula(sheet, col+"14", "="+col+"9-"+col+"13*"+col+"8/"+col+"3") // PV = [218]-[223]*[217]/[212]
+					f.SetCellStyle(sheet, col+"14", col+"14", integerStyle)
 					if col == "C" {
 						formulePVglobale = "=C14"
 					} else {
@@ -574,6 +576,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 			}
 		}
 		f.SetCellFormula(sheet, "C16", formulePVglobale /* To be replaced with "=SOMME(C14:"+lastCol+"14)" once this issue with the Excelize library has been solved: https://github.com/qax-os/excelize/issues/615 */)
+		f.SetCellStyle(sheet, "C16", "C16", integerStyle)
 		f.SetCellValue(sheet, "A18", "Voici votre récapitulatif par catégorie de l'année fiscale "+sheet+" :")
 		f.SetCellValue(sheet, "A19", "- Airdrops fortuits : "+c2086.airdrops[year][native].Neg().RoundBank(2).String()+" "+native)
 		f.SetCellValue(sheet, "A20", "- Remises commerciales (cashback, etc) : "+c2086.commercialRebates[year][native].Neg().RoundBank(2).String()+" "+native)

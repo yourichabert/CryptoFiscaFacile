@@ -536,6 +536,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 		f.SetCellValue(sheet, "B14", "Plus-values et moins-values")
 		f.SetCellValue(sheet, "B16", "Plus-value ou moins-value globale")
 		f.SetColWidth(sheet, "B", "B", 60)
+		precCol := ""
 		col := "C"
 		formulePVglobale := "" // Is it appropriate initialization?
 		count := 1
@@ -553,9 +554,15 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 					f.SetCellFormula(sheet, col+"8", "="+col+"4+"+col+"7")          // [217] = [213]+[216]
 					f.SetCellFormula(sheet, col+"9", "="+col+"4-"+col+"5+"+col+"7") // [218] = [213]-[214]+[216]
 					f.SetCellValue(sheet, col+"10", c.PrixTotalAcquisition220.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"11", c.FractionDeCapital221.RoundBank(0).IntPart())
+					if col == "C" {
+						f.SetCellValue(sheet, col+"11", 0)
+					} else {
+						f.SetCellFormula(sheet, col+"11", "="+precCol+"11+"+precCol+"13*"+precCol+"8/"+precCol+"3") // [221] = [prec221]+[prec223]*[prec217]/[prec212]
+						f.SetCellStyle(sheet, col+"11", col+"11", integerStyle)
+					}
 					f.SetCellValue(sheet, col+"12", c.SoulteRecueEnCasDechangeAnterieur222.RoundBank(0).IntPart())
-					f.SetCellFormula(sheet, col+"13", "="+col+"10-"+col+"11-"+col+"12")        // [223] = [220]-[221]-[222]
+					f.SetCellFormula(sheet, col+"13", "="+col+"10-"+col+"11-"+col+"12") // [223] = [220]-[221]-[222]
+					f.SetCellStyle(sheet, col+"13", col+"13", integerStyle)
 					f.SetCellFormula(sheet, col+"14", "="+col+"9-"+col+"13*"+col+"8/"+col+"3") // PV = [218]-[223]*[217]/[212]
 					f.SetCellStyle(sheet, col+"14", col+"14", integerStyle)
 					if col == "C" {
@@ -565,6 +572,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 					}
 					count += 1
 					num := count + 2
+					precCol = col
 					col = ""
 					for num > 0 {
 						col = string(rune((num-1)%26+65)) + col

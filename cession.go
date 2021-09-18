@@ -535,8 +535,8 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 		f.SetCellValue(sheet, "B14", "Plus-values et moins-values")
 		f.SetCellValue(sheet, "B16", "Plus-value ou moins-value globale")
 		f.SetColWidth(sheet, "B", "B", 60)
-		var plusMoinsValueGlobale decimal.Decimal
 		col := "C"
+		formulePVglobale := "" // Is it appropriate initialization?
 		count := 1
 		for _, c := range c2086.cs {
 			if c.Date211.After(time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)) {
@@ -547,16 +547,20 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 					f.SetCellValue(sheet, col+"3", c.ValeurPortefeuille212.RoundBank(0).IntPart())
 					f.SetCellValue(sheet, col+"4", c.Prix213.RoundBank(0).IntPart())
 					f.SetCellValue(sheet, col+"5", c.Frais214.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"6", c.PrixNetDeFrais215.RoundBank(0).IntPart())
+					f.SetCellFormula(sheet, col+"6", "="+col+"4-"+col+"5") // [215] = [213]-[214]
 					f.SetCellValue(sheet, col+"7", c.SoulteRecueOuVersee216.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"8", c.PrixNetDeSoulte217.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"9", c.PrixNet218.RoundBank(0).IntPart())
+					f.SetCellFormula(sheet, col+"8", "="+col+"4+"+col+"7")          // [217] = [213]+[216]
+					f.SetCellFormula(sheet, col+"9", "="+col+"4-"+col+"5+"+col+"7") // [218] = [213]-[214]+[216]
 					f.SetCellValue(sheet, col+"10", c.PrixTotalAcquisition220.RoundBank(0).IntPart())
 					f.SetCellValue(sheet, col+"11", c.FractionDeCapital221.RoundBank(0).IntPart())
 					f.SetCellValue(sheet, col+"12", c.SoulteRecueEnCasDechangeAnterieur222.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"13", c.PrixTotalAcquisitionNet223.RoundBank(0).IntPart())
-					f.SetCellValue(sheet, col+"14", c.PlusMoinsValue.RoundBank(0).IntPart())
-					plusMoinsValueGlobale = plusMoinsValueGlobale.Add(c.PlusMoinsValue)
+					f.SetCellFormula(sheet, col+"13", "="+col+"10-"+col+"11-"+col+"12")        // [223] = [220]-[221]-[222]
+					f.SetCellFormula(sheet, col+"14", "="+col+"9-"+col+"13*"+col+"8/"+col+"3") // PV = [218]-[223]*[217]/[212]
+					if col == "C" {
+						formulePVglobale = "=C14"
+					} else {
+						formulePVglobale += ("+" + col + "14")
+					}
 					count += 1
 					num := count + 2
 					col = ""
@@ -569,7 +573,7 @@ func (c2086 Cerfa2086) ToXlsx(filename, native string) {
 				}
 			}
 		}
-		f.SetCellValue(sheet, "C16", plusMoinsValueGlobale.RoundBank(0).IntPart())
+		f.SetCellFormula(sheet, "C16", formulePVglobale /* To be replaced with "=SOMME(C14:"+lastCol+"14)" once this issue with the Excelize library has been solved: https://github.com/qax-os/excelize/issues/615 */)
 		f.SetCellValue(sheet, "A18", "Voici votre récapitulatif par catégorie de l'année fiscale "+sheet+" :")
 		f.SetCellValue(sheet, "A19", "- Airdrops fortuits : "+c2086.airdrops[year][native].Neg().RoundBank(2).String()+" "+native)
 		f.SetCellValue(sheet, "A20", "- Remises commerciales (cashback, etc) : "+c2086.commercialRebates[year][native].Neg().RoundBank(2).String()+" "+native)
